@@ -1,3 +1,6 @@
+appsettings.Local.json
+appsettings.json
+
 # IDE
 .idea/
 .vscode/

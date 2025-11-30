@@ -1,6 +1,4 @@
-﻿
-
-using System.ClientModel;
+﻿using System.ClientModel;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
@@ -10,23 +8,12 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenAI;
+using UpbitTradingAgent.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Set up the Azure OpenAI client
-var endpoint = "http://localhost:11434/v1"; 
-var deploymentName = "gemma3:1b"; 
-
-var chatClient = new OpenAIClient(new ApiKeyCredential("dummy"), new OpenAIClientOptions
-    {
-        Endpoint = new Uri(endpoint),
-    })
-    .GetChatClient(deploymentName)
-    .AsIChatClient();
-
-builder.Services.AddChatClient(chatClient);
-
 // Setup Agents
+builder.ConfigureUpbitTradingAgentSystem();
 builder.AddAIAgent("poet", "You are a creative poet. Respond to all requests with beautiful poetry.");
 
 builder.Services.AddOpenAIResponses();
