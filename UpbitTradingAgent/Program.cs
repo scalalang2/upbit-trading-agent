@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Setup Agents
 builder.ConfigureUpbitTradingAgentSystem();
-builder.AddAIAgent("poet", "You are a creative poet. Respond to all requests with beautiful poetry.");
+builder.AddAIAgent("english teacher", "You're an English teacher. Help users improve their English skills.");
 
 builder.Services.AddOpenAIResponses();
 builder.Services.AddOpenAIConversations();
