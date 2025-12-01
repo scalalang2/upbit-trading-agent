@@ -128,11 +128,32 @@ public class UpbitClient : IUpbitClient
 
         return await client.ExecuteAsync(request);
     }
+
+    private static T DeserializeResponse<T>(RestResponse response)
+    {
+        if (!response.IsSuccessful)
+        {
+            throw new Exception($"API call failed with status code {response.StatusCode}: {response.Content}");
+        }
+
+        if (string.IsNullOrWhiteSpace(response.Content))
+        {
+            throw new Exception("API response content is null or empty.");
+        }
+
+        var result = JsonConvert.DeserializeObject<T>(response.Content);
+        if (result is null)
+        {
+            throw new Exception($"Failed to deserialize response content: {response.Content}");
+        }
+
+        return result;
+    }
     
     public async Task<List<ClosedOrderHistory.Response>> GetOrderHistory(ClosedOrderHistory.Request args)
     {
         var response = await ApiCall("orders/closed", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<ClosedOrderHistory.Response>>(response.Content);
+        return DeserializeResponse<List<ClosedOrderHistory.Response>>(response);
     }
     
     public async Task<Order.Response> GetOrder(string uuid)
@@ -142,79 +163,79 @@ public class UpbitClient : IUpbitClient
             uuid = uuid,
         };
         var response = await ApiCall("order", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<Order.Response>(response.Content);
+        return DeserializeResponse<Order.Response>(response);
     }
     
     public async Task<List<Orders.Response>> GetOrders(Orders.Request args)
     {
         var response = await ApiCall("orders", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Orders.Response>>(response.Content);
+        return DeserializeResponse<List<Orders.Response>>(response);
     }
     
     public async Task<List<CoinAddress.Response>> GetCoinAdresses()
     {
         var response = await ApiCall("deposits/coin_addresses", Method.Get);
-        return JsonConvert.DeserializeObject<List<CoinAddress.Response>>(response.Content);
+        return DeserializeResponse<List<CoinAddress.Response>>(response);
     }
     
     public async Task<CoinAddress.Response> GetCoinAdress(CoinAddress.Request args)
     {
         var response = await ApiCall("deposits/coin_address", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<CoinAddress.Response>(response.Content);
+        return DeserializeResponse<CoinAddress.Response>(response);
     }
     
     public async Task<Chance.Response> GetChance(Chance.Request args)
     {
         var response = await ApiCall("orders/chance", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<Chance.Response>(response.Content);
+        return DeserializeResponse<Chance.Response>(response);
     }
     
     public async Task<Withdraw.Response> GetWithdraw(Withdraw.Request args)
     {
         var response = await ApiCall("deposit", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<Withdraw.Response>(response.Content);
+        return DeserializeResponse<Withdraw.Response>(response);
     }
     
     public async Task<List<Withdraws.Response>> GetWithdraws(Withdraws.Request args)
     {
         var response = await ApiCall("deposits", Method.Get, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Withdraws.Response>>(response.Content);
+        return DeserializeResponse<List<Withdraws.Response>>(response);
     }
     
     public async Task<bool> CancelOrder(CancelOrder.Request args)
     {
         var response = await ApiCall("order", Method.Delete, GenerateApiCallArgs(args));
-        return response.StatusCode == HttpStatusCode.OK;
+        return response.IsSuccessful;
     }
     
     public async Task<List<WalletStatus.Response>> GetWalletStatus()
     {
         var response = await ApiCall("status/wallet", Method.Get);
-        return JsonConvert.DeserializeObject<List<WalletStatus.Response>>(response.Content);
+        return DeserializeResponse<List<WalletStatus.Response>>(response);
     }
     
     public async Task<List<ApiKeys.Response>> GetApiKeys()
     {
         var response = await ApiCall("api_keys", Method.Get);
-        return JsonConvert.DeserializeObject<List<ApiKeys.Response>>(response.Content);
+        return DeserializeResponse<List<ApiKeys.Response>>(response);
     }
     
     public async Task<List<Accounts.Response>> GetAccounts()
     {
         var response = await ApiCall("accounts", Method.Get);
-        return JsonConvert.DeserializeObject<List<Accounts.Response>>(response.Content);
+        return DeserializeResponse<List<Accounts.Response>>(response);
     }
     
     public async Task<GenerateCoinAddress.Response> GenerateCoinAddress(GenerateCoinAddress.Request args)
     {
         var response = await ApiCall("deposits/generate_coin_address", Method.Post, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<GenerateCoinAddress.Response>(response.Content);
+        return DeserializeResponse<GenerateCoinAddress.Response>(response);
     }
     
     public async Task<DepositKrw.Response> DepositKrw(DepositKrw.Request args)
     {
         var response = await ApiCall("deposits/krw", Method.Post, GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<DepositKrw.Response>(response.Content);
+        return DeserializeResponse<DepositKrw.Response>(response);
     }
     
     public async Task<PlaceOrder.Response> PlaceOrder(PlaceOrder.Request args)
@@ -224,54 +245,54 @@ public class UpbitClient : IUpbitClient
         {
             throw new Exception($"Error placing order: {response.Content}");
         }
-        return JsonConvert.DeserializeObject<PlaceOrder.Response>(response.Content);
+        return DeserializeResponse<PlaceOrder.Response>(response);
     }
     
     public async Task<List<Ticks.Response>> GetTicks(Ticks.Request args)
     {
         var response = await this.NonAuthApiCall("trades/ticks", GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Ticks.Response>>(response.Content);
+        return DeserializeResponse<List<Ticks.Response>>(response);
     }
     
     public async Task<List<Ticker>> GetTicker(string symbol)
     {
         var response = await this.NonAuthApiCall($"ticker/?markets={symbol}", null);
-        return JsonConvert.DeserializeObject<List<Ticker>>(response.Content);
+        return DeserializeResponse<List<Ticker>>(response);
     }
     
     public async Task<List<MarketCodes>> GetMarketCodes()
     {
         var response = await this.NonAuthApiCall("market/all?isDetails=true", null);
-        return JsonConvert.DeserializeObject<List<MarketCodes>>(response.Content);
+        return DeserializeResponse<List<MarketCodes>>(response);
     }
     
     public async Task<List<DayCandles.Response>> GetDayCandles(DayCandles.Request args)
     {
         var response = await this.NonAuthApiCall("candles/days", GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<DayCandles.Response>>(response.Content);
+        return DeserializeResponse<List<DayCandles.Response>>(response);
     }
     
     public async Task<List<Candles.Response>> GetWeekCandles(Candles.Request args)
     {
         var response = await this.NonAuthApiCall("candles/weeks", GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Candles.Response>>(response.Content);
+        return DeserializeResponse<List<Candles.Response>>(response);
     }
     
     public async Task<List<Candles.Response>> GetMonthCandles(Candles.Request args)
     {
         var response = await this.NonAuthApiCall("candles/months", GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Candles.Response>>(response.Content);
+        return DeserializeResponse<List<Candles.Response>>(response);
     }
     
     public async Task<List<Candles.Response>> GetMinuteCandles(int unit, Candles.Request args)
     {
         var response = await this.NonAuthApiCall($"candles/minutes/{unit}", GenerateApiCallArgs(args));
-        return JsonConvert.DeserializeObject<List<Candles.Response>>(response.Content);
+        return DeserializeResponse<List<Candles.Response>>(response);
     }
     
     public async Task<List<OrderBook.Response>> GetOrderBooks(string symbol)
     {
         var response = await this.NonAuthApiCall($"/orderbook/?markets={symbol}", null);
-        return JsonConvert.DeserializeObject<List<OrderBook.Response>>(response.Content);
+        return DeserializeResponse<List<OrderBook.Response>>(response);
     }
 }
